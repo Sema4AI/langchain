@@ -27,6 +27,7 @@ from langchain_robocorp._prompts import (
     API_CONTROLLER_PROMPT,
 )
 
+ACTION_CONTEXT_HEADER = "X-Action-Context"
 LLM_TRACE_HEADER = "X-action-trace"
 
 
@@ -103,6 +104,8 @@ class ActionServerToolkit(BaseModel):
     """Action Server URL"""
     api_key: str = Field(exclude=True, default="")
     """Action Server request API key"""
+    context: Optional[str] = Field(exclude=True, default=None)
+    """Action Server context"""
     report_trace: bool = Field(exclude=True, default=False)
     """Enable reporting Langsmith trace to Action Server runs"""
     _run_details: dict = PrivateAttr({})
@@ -227,6 +230,8 @@ class ActionServerToolkit(BaseModel):
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
+        if self.context is not None:
+            headers[ACTION_CONTEXT_HEADER] = self.context
 
         try:
             if self.report_trace and "run_id" in self._run_details:
